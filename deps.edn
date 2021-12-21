@@ -1,0 +1,5 @@
+{:deps {cheshire/cheshire {:mvn/version "5.9.0"}
+        clj-http/clj-http {:mvn/version "3.10.1"}
+        org.clojure/data.codec {:mvn/version "0.1.0"}
+        org.clojure/tools.cli {:mvn/version "1.0.194"}
+        org.clojure/tools.logging {:mvn/version "0.3.1"}}}
