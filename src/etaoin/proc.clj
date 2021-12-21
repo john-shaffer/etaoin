@@ -35,14 +35,7 @@
          (.put pb-env (name k) (str v))))
      (.redirectOutput pb (get-log-file log-stdout))
      (.redirectError pb  (get-log-file log-stderr))
-     (try
-       (.start pb)
-       (catch java.io.IOException e
-         (throw (ex-info
-                  (format "Cannot find a binary file `%s` for the driver.
-Please ensure you have the driver installed and specify the path to it.
-For driver installation, check out the official readme file from Etaoin: %s" binary readme-link)
-                  {:args args} e)))))))
+     (.start pb))))
 
 ;; todo store those streams
 
