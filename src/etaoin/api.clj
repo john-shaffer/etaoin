@@ -3652,6 +3652,21 @@
         (when process
           (stop-driver driver))))))
 
+(defn- boot-driver* [type {:keys [host webdriver-url] :as opts}]
+  (let [default-opts (cond-> (merge (dissoc defaults-global :capabilities)
+                                    (dissoc (type defaults) :capabilities))
+                             ;; if host, we are launching webdriver, default port is random
+                             (not host) (assoc :port (util/get-free-port)))]
+    (let [merged-opts (merge default-opts opts)]
+      (try
+        [(cond-> (-create-driver type merged-opts)
+                 (and (not host) (not webdriver-url)) (-run-driver merged-opts))
+         merged-opts]
+        (catch clojure.lang.ExceptionInfo e
+          (if (and (not host) (re-matches #"Port \d+ already in use" (.getMessage e)))
+            (boot-driver* type opts)
+            (throw e)))))))
+
 (defn boot-driver
   "Launch and return a driver of `type` (e.g. `:chrome`, `:firefox` `:safari` `:edge` `:phantom`)
   with `opts` options.
@@ -3668,14 +3683,8 @@
   `opts` map is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   ([type]
    (boot-driver type {}))
-  ([type {:keys [host webdriver-url] :as opts}]
-   (let [default-opts (cond-> (merge (dissoc defaults-global :capabilities)
-                                     (dissoc (type defaults) :capabilities))
-                        ;; if host, we are launching webdriver, default port is random
-                        (not host) (assoc :port (util/get-free-port)))
-         opts (merge default-opts opts)
-         driver (cond-> (-create-driver type opts)
-                  (and (not host) (not webdriver-url)) (-run-driver opts))]
+  ([type opts]
+   (let [[driver opts] (boot-driver* type opts)]
      (try
        (-connect-driver driver opts)
        (catch Throwable ex
